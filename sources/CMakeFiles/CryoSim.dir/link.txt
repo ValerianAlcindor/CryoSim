@@ -1,1 +1,0 @@
-clang++ -O3 -DNDEBUG -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.15.sdk -Wl,-search_paths_first -Wl,-headerpad_max_install_names CMakeFiles/CryoSim.dir/CryoSim.cxx.o -o ../bin/CryoSim  -Wl,-rpath,/Users/valerian/Software/CryoSim/lib ../lib/libCryoSimLib.dylib /usr/local/lib/libgsl.dylib /usr/local/lib/libgslcblas.dylib 

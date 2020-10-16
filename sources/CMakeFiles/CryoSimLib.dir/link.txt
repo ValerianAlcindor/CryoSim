@@ -1,1 +1,0 @@
-clang++ -O3 -DNDEBUG -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.15.sdk -dynamiclib -Wl,-headerpad_max_install_names -o ../lib/libCryoSimLib.dylib -install_name @rpath/libCryoSimLib.dylib CMakeFiles/CryoSimLib.dir/cryostat.cxx.o 

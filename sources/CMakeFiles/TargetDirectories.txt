@@ -1,4 +1,0 @@
-/Users/valerian/Software/CryoSim/sources/CMakeFiles/rebuild_cache.dir
-/Users/valerian/Software/CryoSim/sources/CMakeFiles/edit_cache.dir
-/Users/valerian/Software/CryoSim/sources/CMakeFiles/CryoSim.dir
-/Users/valerian/Software/CryoSim/sources/CMakeFiles/CryoSimLib.dir
