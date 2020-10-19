@@ -123,6 +123,8 @@ void CryoSim::cryostat::compute(double q, double Pres, double HL, double& x,
   // Pressure drop equation
   double eM = 0.5;
 
+  cout << "Test" << endl;
+
   //_______________________Main loop for zref, mt and x______________________
 
   for (int y = 0; y < 1000; y++) {
