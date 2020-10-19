@@ -49,6 +49,7 @@ public:
   double phisquare1; // Two phase multiplier for homogen model
 
 public:
+  double FrictionCoefficient(double mt);
   double EC(double mt, double x0, double q, double zsrefInput);
   double PressureDrop(double mtot0, double q, double zsrefInput);
   double Temperature(double P);

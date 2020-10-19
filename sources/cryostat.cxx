@@ -16,6 +16,13 @@ CryoSim::cryostat::cryostat() {
 }
 CryoSim::cryostat::~cryostat() {}
 
+double CryoSim::cryostat::FrictionCoefficient(double mt) {
+
+  double val = 0.079 / pow(abs(mt) * D / (TubeArea * muL), 0.25);
+
+  return val;
+}
+
 // Energy Conservation____
 double CryoSim::cryostat::EC(double mt, double VQ, double q,
                              double zsrefInput) {
@@ -40,35 +47,36 @@ double CryoSim::cryostat::PressureDrop(double mtot0, double q,
   zsref = zsrefInput;
 
   // Liquid phase friction coefficient
-  double Cflo = 0.079 / pow(mtot0 * D / (TubeArea * muL), 0.25);
+  double Cflo = FrictionCoefficient(mtot0);
   double gap  = 0.15;
 
   // Pressure variation for the heated liquid
   double deltaP1phase
-      = ((2 * Cflo * pow(mtot0, 2)) * (zsref)) / (D * rhoL * pow(TubeArea, 2))
-        + ((rhoL * g * (zsref))
-           * (1 - beta * ((q * M_PI * D) / (2 * mtot0 * HC)) * (zsref)));
+      = 2 * Cflo * pow(mtot0, 2) * zsref / (D * rhoL * pow(TubeArea, 2))
+        + rhoL * g * zsref
+              * (1 - beta * q * M_PI * D / (2 * mtot0 * HC) * zsref);
 
-  double abovetarget
+  double abovetarget // did not find this equation in YD report -> needs to be
+                     // checked
       = ((2 * Cflo * pow(mtot0, 2)) * (gap)) / (D * rhoL * pow(TubeArea, 2))
         + ((rhoL * g * (gap))
            * (1 - beta * ((q * M_PI * D) / (2 * mtot0 * HC)) * (gap)));
 
   // Pressure variation for the heated 2phases fluid
   double deltaP2phase
-      = ((2 * Cflo * pow(mtot0, 2)) / (D * rhoL * pow(TubeArea, 2)))
-            * ((zch - zsref) * phisquare1)
-        + (pow(mtot0, 2) / ((pow(TubeArea, 2)) * rhoL))
-              * (((pow(FinalVQ, 2)) * rhoL) / ((VF1 * rhoG))
-                 + ((1 - FinalVQ) * (1 - FinalVQ)) / (1 - VF1) - 1)
+      = 2 * Cflo * pow(mtot0, 2) / (D * rhoL * pow(TubeArea, 2)) * (zch - zsref)
+            * phisquare1
+        + pow(mtot0, 2) / ((pow(TubeArea, 2)) * rhoL)
+              * (pow(FinalVQ, 2) * rhoL / (VF1 * rhoG)
+                 + pow(1 - FinalVQ, 2) / (1 - VF1) - 1)
         + g * (zch - zsref) * (VF1 * rhoG + (1 - VF1) * rhoL);
 
   // Pressure variation in the no heated line
-  double deltaPriser = ((2 * Cflo * pow(mtot0, 2)) * (zmax - zch) * phisquare1)
+  double deltaPriser = 2 * Cflo * pow(mtot0, 2) * (zmax - zch) * phisquare1
                            / (D * rhoL * pow(TubeArea, 2))
-                       + ((VF1 * rhoG + (1 - VF1) * rhoL) * g * (zmax - zch));
+                       + (VF1 * rhoG + (1 - VF1) * rhoL) * g * (zmax - zch);
 
-  double deltaPS = (pow(mtot0, 2))
+  double deltaPS = pow(mtot0, 2)
                    / (2 * pow(TubeArea, 2) * (VF1 * rhoG + (1 - VF1) * rhoL));
   // Return line pressure drop [Pa]
   double delta13 = deltaP1phase + deltaP2phase + deltaPriser + deltaPS
@@ -83,6 +91,7 @@ double CryoSim::cryostat::PressureDrop(double mtot0, double q,
 // Temperature(saturation-Pz)
 double CryoSim::cryostat::Temperature(double P) {
 
+  // Constant name?
   double AA = 15.46688;
   double BB = -1.013378E2;
   double C  = 5.432005E-2;
@@ -92,10 +101,9 @@ double CryoSim::cryostat::Temperature(double P) {
   double b = (AA - log(P)) / D;
   double c = BB / D;
   double x[3];
-  double xT[3];
 
   gsl_poly_solve_cubic(a, b, c, &x[0], &x[1], &x[2]);
-  return x[1];
+  return x[1]; // x[2]? x[3]??
 }
 
 void CryoSim::cryostat::compute(double q, double Pres, double HL, double& x,
@@ -110,26 +118,35 @@ void CryoSim::cryostat::compute(double q, double Pres, double HL, double& x,
 
   double previousz = 10;
   double lastz     = 15;
+  double v         = 0;
 
   // Pressure drop equation
   double eM = 0.5;
 
+  //_______________________Main loop for zref, mt and x______________________
+
   for (int y = 0; y < 1000; y++) {
-    if (((abs(eM)) >= 0.0001) || ((abs(previousz - lastz)) >= 0.001)
-        || ((x) < 0)) {
+    if (abs(eM) >= 0.0001 || abs(previousz - lastz) >= 0.001 || x < 0) {
       mtot0 = mt;
 
       // zsref = Vaporization height
-      TubeArea = M_PI * pow((D / 2.), 2);
+      TubeArea = M_PI * pow(D / 2., 2);
+      // TargetArea = M_PI*pow((0.02/2.),2); Target cross section
 
       // Liquid phase friction coefficient
-      double Cflo = 0.079 / pow(((abs(mt)) * D) / (TubeArea * muL), 0.25);
+      double Cflo = FrictionCoefficient(mt);
+
+      // Liquid phase friction coeff for the target (different D)
+      // double Cflo2 =
+      // 0.079/pow(((abs(mt))*0.02)/(TargetArea2*muL),0.25);
 
       delta13input         = rhoL * g * lsupply;
-      double frictionforce = (2 * Cflo * pow(mt, 2) * (lsupply + L * 2 + 0.15))
+      double frictionforce = 2 * Cflo * pow(mt, 2) * (lsupply + L * 2 + 0.15)
                              / (D * rhoL * pow(TubeArea, 2));
 
       double Pe = Pres + delta13input - frictionforce - rhoL * g * 0.15;
+
+      //_____________________Loop for Tref and zref____________________
 
       z             = 0;
       int    zsteps = 10000;
@@ -139,45 +156,46 @@ void CryoSim::cryostat::compute(double q, double Pres, double HL, double& x,
       for (int i = 0; i < zsteps; i++) {
         // Temperature and pressure calculations at z
         double Pz
-            = Pe + (2 * Cflo * pow(mt, 2) * z) / (D * rhoL * pow(TubeArea, 2))
-              + (rhoL * g * z)
-                    * (1 - beta * ((q * M_PI * D) / (2 * mt * HC)) * z);
-        Temperature(Pz);
+            = Pe + 2 * Cflo * pow(mt, 2) * z / (D * rhoL * pow(TubeArea, 2))
+              + rhoL * g * z * (1 - beta * (q * M_PI * D / (2 * mt * HC)) * z);
+        // Temperature(Pz); // I don't think this is needed because the value is
+        // not saved
 
         // additional radiation heat from the detecteur [K]
-        double Thorizontal = ((2 * M_PI * D * L * 2) / (mt * HC)); // q=4W/m^2
+        double Thorizontal = 2 * M_PI * D * L * 2 / (mt * HC); // q=4W/m^2
 
         // Temperature at z [K]
-        double Tz = Temperature(Pres)
-                    + ((q * M_PI * D - mt * g) / (mt * HC)) * (z) + Thorizontal;
+        double Tz = Temperature(Pres) + (q * M_PI * D - mt * g) / (mt * HC) * z
+                    + Thorizontal;
 
-        if ((abs(Temperature(Pz) - Tz)) <= 0.0001) {
-          zsref      = z;
-          zsrefInput = zsref;
-          Tsref      = Tz;
-          lastz      = zsref;
+        if (abs(Temperature(Pz) - Tz) <= 0.0001) {
+          zsref = z;
+          Tsref = Tz;
+          lastz = zsref;
           break;
         }
-        if (Tz > (Temperature(Pz))) {
-          zsref      = z;
-          zsrefInput = zsref;
-          Tsref      = Tz;
+        if (Tz > Temperature(Pz)) {
+          zsref = z;
+          Tsref = Tz;
           break;
         } else {
           z = z + dz;
         }
       }
 
+      //__________________________Loop for vapor
+      //quality_______________________________
+
       // Vapor quality
       // vapor mass flux [kg/s]
-      double mV = (q * M_PI * D * HL / Lv);
-      double x1 = (mV / mt);
+      double mV = q * M_PI * D * HL / Lv;
+      double x1 = mV / mt;
 
       // VQ and x have to be close to the expected value otherwise the
       // algorithm diverge
       double VQ = 100; // 0.09
-      x         = 0.1; // 0.01
-      double dx = 0.1;
+      x                   = 0.1; // 0.01
+      double dx           = 0.1;
 
       z          = zsref;
       int hsteps = 10000;
@@ -186,37 +204,41 @@ void CryoSim::cryostat::compute(double q, double Pres, double HL, double& x,
       for (int i = 0; i < hsteps; i++) {
         z = HL;
 
-        double Pz = Pe;
-        Pz += (2 * Cflo * pow(mt, 2) * z) / (D * rhoL * pow(TubeArea, 2));
-        Pz += (rhoL * g * z)
-              * (1 - beta * ((q * M_PI * D) / (2 * mt * HC)) * z);
+        double Pz
+            = Pe + 2 * Cflo * pow(mt, 2) * z / (D * rhoL * pow(TubeArea, 2))
+              + rhoL * g * z * (1 - beta * (q * M_PI * D / (2 * mt * HC)) * z);
         Tsat = Temperature(Pz);
 
         // Energie conservation equation (thesis p111 IV-23)
-        double eX = (EC(mt, VQ, q, zsref) * dx)
-                    / (EC(mt, VQ + dx, q, zsref) - EC(mt, VQ, q, zsref));
+        double eX = EC(mt, VQ, q, zsref) * dx
+                    / (EC(mt, VQ + dx, q, zsref)
+                       - EC(mt, VQ, q, zsref));
+
         x = VQ - eX;
 
-        if ((abs(x - VQ)) <= 0.00001) {
+        if (abs(x - VQ) <= 0.00001) {
           zch = HL;
+
           // void fraction from homogeneous model
-          VF1 = ((abs(x)) * rhoL) / ((abs(x)) * rhoL + (1 - (abs(x))) * rhoG);
-          phisquare1 = (1 + (abs(x)) * (rhoL - rhoG) / rhoG)
-                       * pow((1 + (abs(x)) * (muL - muG) / muG), -0.25);
+          VF1        = abs(x) * rhoL / (abs(x) * rhoL + (1 - abs(x)) * rhoG);
+          phisquare1 = (1 + abs(x) * (rhoL - rhoG) / rhoG)
+                       * pow(1 + abs(x) * (muL - muG) / muG, -0.25);
           break;
         } else {
           VQ = x;
         }
       }
 
+      //_________________________Calculation of mt__________________________
+
       // Total mass flux
-      double dm = 0.00001;
-      FinalVQ   = x;
+      double dm         = 0.00001;
+      FinalVQ = x;
 
       // Pressure drop equation (thesis p111 IV-22)
-      eM = ((PressureDrop(mtot0, q, zsref)) * dm)
-           / ((PressureDrop(mtot0 + dm, q, zsref))
-              - (PressureDrop(mtot0, q, zsref)));
+      eM = PressureDrop(mtot0, q, zsref) * dm
+           / (PressureDrop(mtot0 + dm, q, zsref)
+              - PressureDrop(mtot0, q, zsref));
       mt = mtot0 - eM;
     } else {
       std::cout << "Total mass flow  = " << mt << " [kg/s], "
@@ -225,5 +247,12 @@ void CryoSim::cryostat::compute(double q, double Pres, double HL, double& x,
                 << "  Vaporization height = " << zsref << "[m] " << std::endl;
       break;
     }
-  }
+    v = v + 1;
+    if (v > 998) {
+      mt    = 0;
+      x     = 0;
+      zsref = 0;
+    }
+
+  } //________________End main loop____________________
 }
