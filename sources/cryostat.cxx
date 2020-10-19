@@ -63,13 +63,12 @@ double CryoSim::cryostat::PressureDrop(double mtot0, double q,
            * (1 - beta * ((q * M_PI * D) / (2 * mtot0 * HC)) * (gap)));
 
   // Pressure variation for the heated 2phases fluid
-  double deltaP2phase
-      = 2 * Cflo * pow(mtot0, 2) / (D * rhoL * pow(TubeArea, 2)) * (zch - zsref)
-            * phisquare1
-        + pow(mtot0, 2) / ((pow(TubeArea, 2)) * rhoL)
-              * (pow(FinalVQ, 2) * rhoL / (VF1 * rhoG)
-                 + pow(1 - FinalVQ, 2) / (1 - VF1) - 1)
-        + g * (zch - zsref) * (VF1 * rhoG + (1 - VF1) * rhoL);
+  double deltaP2phase = 2 * Cflo * pow(mtot0, 2) / (D * rhoL * pow(TubeArea, 2))
+                            * (zch - zsref) * phisquare1
+                        + pow(mtot0, 2) / ((pow(TubeArea, 2)) * rhoL)
+                              * (pow(FinalVQ, 2) * rhoL / (VF1 * rhoG)
+                                 + pow(1 - FinalVQ, 2) / (1 - VF1) - 1)
+                        + g * (zch - zsref) * (VF1 * rhoG + (1 - VF1) * rhoL);
 
   // Pressure variation in the no heated line
   double deltaPriser = 2 * Cflo * pow(mtot0, 2) * (zmax - zch) * phisquare1
@@ -103,7 +102,8 @@ double CryoSim::cryostat::Temperature(double P) {
   double x[3];
 
   gsl_poly_solve_cubic(a, b, c, &x[0], &x[1], &x[2]);
-  return x[1]; // x[2]? x[3]??
+  // std::cout << x[0] << " " << x[1] << " " << x[2] << std::endl;
+  return x[1]; // x[0]? x[2]??
 }
 
 void CryoSim::cryostat::compute(double q, double Pres, double HL, double& x,
@@ -184,7 +184,7 @@ void CryoSim::cryostat::compute(double q, double Pres, double HL, double& x,
       }
 
       //__________________________Loop for vapor
-      //quality_______________________________
+      // quality_______________________________
 
       // Vapor quality
       // vapor mass flux [kg/s]
@@ -194,8 +194,8 @@ void CryoSim::cryostat::compute(double q, double Pres, double HL, double& x,
       // VQ and x have to be close to the expected value otherwise the
       // algorithm diverge
       double VQ = 100; // 0.09
-      x                   = 0.1; // 0.01
-      double dx           = 0.1;
+      x         = 0.1; // 0.01
+      double dx = 0.1;
 
       z          = zsref;
       int hsteps = 10000;
@@ -211,8 +211,7 @@ void CryoSim::cryostat::compute(double q, double Pres, double HL, double& x,
 
         // Energie conservation equation (thesis p111 IV-23)
         double eX = EC(mt, VQ, q, zsref) * dx
-                    / (EC(mt, VQ + dx, q, zsref)
-                       - EC(mt, VQ, q, zsref));
+                    / (EC(mt, VQ + dx, q, zsref) - EC(mt, VQ, q, zsref));
 
         x = VQ - eX;
 
@@ -232,8 +231,8 @@ void CryoSim::cryostat::compute(double q, double Pres, double HL, double& x,
       //_________________________Calculation of mt__________________________
 
       // Total mass flux
-      double dm         = 0.00001;
-      FinalVQ = x;
+      double dm = 0.00001;
+      FinalVQ   = x;
 
       // Pressure drop equation (thesis p111 IV-22)
       eM = PressureDrop(mtot0, q, zsref) * dm

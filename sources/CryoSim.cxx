@@ -8,7 +8,7 @@
 
 #include "cryostat.h"
 
-int main() {
+int main(int argc, char* argv[]) {
 
   CryoSim::cryostat cryo;
 
@@ -46,12 +46,10 @@ int main() {
     std::cout << "i :" << i << "  tabq[i] = " << tabq[i] << std::endl;
 
     if (x > 0) {
-      // if (zsrefInput > 0) {
       if (mt > 0) {
         fprintf(fout, "%f       %f       %f         %f        %f          %f\n",
                 tabq[i], tabPres[i], tabHL1[i], x, zsrefInput + 0.15, mt);
       }
-      // }
     }
   }
 
