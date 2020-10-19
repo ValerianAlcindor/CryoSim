@@ -120,6 +120,8 @@ void CryoSim::cryostat::compute(double q, double Pres, double HL, double& x,
   double lastz     = 15;
   double v         = 0;
 
+  std::cout << "TEST" << std::endl;
+
   // Pressure drop equation
   double eM = 0.5;
 
