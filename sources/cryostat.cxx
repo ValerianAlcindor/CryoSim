@@ -102,12 +102,15 @@ double CryoSim::cryostat::Temperature(double P) {
   double x[3];
 
   gsl_poly_solve_cubic(a, b, c, &x[0], &x[1], &x[2]);
-  // std::cout << x[0] << " " << x[1] << " " << x[2] << std::endl;
+//  std::cout << x[0] << " " << x[1] << " " << x[2] << std::endl;
   return x[1]; // x[0]? x[2]??
 }
 
 void CryoSim::cryostat::compute(double q, double Pres, double HL, double& x,
                                 double& zsrefInput, double& mt) {
+
+  std::cout << "_________________Calculate q = " << q << "____________________" << std::endl;
+
 
   // What can be modified
   zmax           = 0.55; // (l = zmax)
@@ -147,10 +150,13 @@ void CryoSim::cryostat::compute(double q, double Pres, double HL, double& x,
       double Pe = Pres + delta13input - frictionforce - rhoL * g * 0.15;
 
       //_____________________Loop for Tref and zref____________________
-
+      
+/*
       z             = 0;
-      int    zsteps = 10000;
+      int    zsteps = 10000;// 10000 too many steps ???
       double dz     = zmax / zsteps;
+
+//      std::cout << "y: " << y << std::endl;
 
       previousz = zsref;
       for (int i = 0; i < zsteps; i++) {
@@ -168,6 +174,11 @@ void CryoSim::cryostat::compute(double q, double Pres, double HL, double& x,
         double Tz = Temperature(Pres) + (q * M_PI * D - mt * g) / (mt * HC) * z
                     + Thorizontal;
 
+//	std::cout << "z: " << z << std::endl;
+//	std::cout << "Tz: " << Tz << std::endl;
+//	std::cout << "Tsat: " << Temperature(Pz) << std::endl;
+//	std::cout << i << std::endl;
+
         if (abs(Temperature(Pz) - Tz) <= 0.0001) {
           zsref = z;
           Tsref = Tz;
@@ -182,6 +193,49 @@ void CryoSim::cryostat::compute(double q, double Pres, double HL, double& x,
           z = z + dz;
         }
       }
+*/
+
+
+//      std::cout << "y: " << y << std::endl;
+
+      z = 0;
+      double dz = 0.000005;
+      double Pz;
+      double Tz;
+
+      previousz = zsref;
+      
+	do {
+	
+	z += dz;
+//	std::cout << "z: " << z << std::endl;
+	if (z > zmax) { 
+//	std::cout << "Loop did not converge" << std::endl;
+	break;
+	}
+	// Temperature and pressure calculations at z
+        Pz
+            = Pe + 2 * Cflo * pow(mt, 2) * z / (D * rhoL * pow(TubeArea, 2))
+              + rhoL * g * z * (1 - beta * (q * M_PI * D / (2 * mt * HC)) * z);
+        // Temperature(Pz); // I don't think this is needed because the value is
+        // not saved
+
+        // additional radiation heat from the detecteur [K]
+        double Thorizontal = 2 * M_PI * D * L * 2 / (mt * HC); // q=4W/m^2
+
+        // Temperature at z [K]
+        Tz = Temperature(Pres) + (q * M_PI * D - mt * g) / (mt * HC) * z
+                    + Thorizontal;
+        
+//        std::cout << "Tz: " << Tz << std::endl;
+//        std::cout << "Tsat: " << Temperature(Pz) << std::endl;            
+        
+        } while (abs(Temperature(Pz) - Tz) >= 0.0001);
+
+        zsref = z;
+        Tsref = Tz;
+        lastz = zsref;
+
 
       //__________________________Loop for vapor
       // quality_______________________________
@@ -200,6 +254,7 @@ void CryoSim::cryostat::compute(double q, double Pres, double HL, double& x,
       z          = zsref;
       int hsteps = 10000;
       dz         = zmax / hsteps;
+
 
       for (int i = 0; i < hsteps; i++) {
         z = HL;
@@ -233,7 +288,7 @@ void CryoSim::cryostat::compute(double q, double Pres, double HL, double& x,
       // Total mass flux
       double dm = 0.00001;
       FinalVQ   = x;
-
+      
       // Pressure drop equation (thesis p111 IV-22)
       eM = PressureDrop(mtot0, q, zsref) * dm
            / (PressureDrop(mtot0 + dm, q, zsref)
