@@ -27,16 +27,26 @@ double CryoSim::cryostat::FrictionCoefficient(double mt) {
 double CryoSim::cryostat::EC(double mt, double VQ, double q,
                              double zsrefInput) {
 
+  
+//  std::cout << zsref << std::endl;
+
   // homogene model
   // void fraction from homogeneous model
   VF1 = (VQ * rhoL) / (VQ * rhoL + (1 - VQ) * rhoG);
+  
+//  std::cout << zch << std::endl;
+//  std::cout << Tsref << std::endl;
 
-  double val = mt * HC * (Tsat - Tsref);
-  val += mt * Lv * VQ;
-  val += mt * g * (z - zsref) - q * M_PI * D * (z - zsref);
+  double val = mt * HC * (Tsat - Tsref); // Tsat(z) Tsref(zref) ????
+//  std::cout << val << std::endl;
+  val += mt * Lv * VQ; // Lv(z) ???
+//  std::cout << val << std::endl;
+  val += mt * g * (zch - zsref) - q * M_PI * D * (zch - zsref);
+//  std::cout << val << std::endl;
   val += ((8. * pow(mt, 3)) / (pow(M_PI, 2.) * pow(D, 4.) * pow(rhoL, 2.)))
          * ((pow(VQ, 3.) * pow(rhoL, 2.)) / (pow(VF1, 2.) * pow(rhoG, 2.))
             + (pow((1 - VQ), 3.)) / (pow((1 - VF1), 2.)) - 1);
+//  std::cout << val << std::endl;
 
   return val;
 }
@@ -240,6 +250,8 @@ void CryoSim::cryostat::compute(double q, double Pres, double HL, double& x,
       //__________________________Loop for vapor
       // quality_______________________________
 
+
+/*
       // Vapor quality
       // vapor mass flux [kg/s]
       double mV = q * M_PI * D * HL / Lv;
@@ -257,6 +269,8 @@ void CryoSim::cryostat::compute(double q, double Pres, double HL, double& x,
 
 
       for (int i = 0; i < hsteps; i++) {
+        std::cout << "i: " << i << std::endl;
+      
         z = HL;
 
         double Pz
@@ -270,6 +284,8 @@ void CryoSim::cryostat::compute(double q, double Pres, double HL, double& x,
 
         x = VQ - eX;
 
+	std::cout << VQ -eX << std::endl;
+
         if (abs(x - VQ) <= 0.00001) {
           zch = HL;
 
@@ -282,6 +298,46 @@ void CryoSim::cryostat::compute(double q, double Pres, double HL, double& x,
           VQ = x;
         }
       }
+*/
+
+//  while (z <= zch) {
+  
+//  std::cout << "y: " << y << std::endl;
+  
+  zch = 0.2;
+  
+  x = 0.98; // Start value must be between 0 and 1. for 1 homgeneous model does not work,
+            // because VF1 becomes 1 and the energy equation is divided by 0
+  double dx = 0.0001;
+  double VQ;
+  Pz = Pe + 2 * Cflo * pow(mt, 2) * zch / (D * rhoL * pow(TubeArea, 2))
+              + rhoL * g * zch * (1 - beta * (q * M_PI * D / (2 * mt * HC)) * zch);
+  
+  Tsat = Temperature(Pz);
+
+	do {
+
+
+	VQ = x;
+//	std::cout << zsref << std::endl;
+	
+        // Energie conservation equation (thesis p111 IV-23)
+        double eX = EC(mt, VQ, q, zsref) * dx
+                    / (EC(mt, VQ + dx, q, zsref) - EC(mt, VQ, q, zsref));
+
+        x = VQ - eX;
+        
+//        std::cout << "x: " << x << std::endl;
+//        std::cout << "eX: " << eX << std::endl;
+//        std::cout << "x-VQ: " << VQ - x << std::endl;  	
+  	
+  	} while (abs(x - VQ) >= 0.00001);
+//  }
+
+      VF1        = abs(x) * rhoL / (abs(x) * rhoL + (1 - abs(x)) * rhoG);
+      phisquare1 = (1 + abs(x) * (rhoL - rhoG) / rhoG)
+                       * pow(1 + abs(x) * (muL - muG) / muG, -0.25);
+
 
       //_________________________Calculation of mt__________________________
 
