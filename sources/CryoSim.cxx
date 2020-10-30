@@ -40,7 +40,14 @@ int main(int argc, char* argv[]) {
     tabHL3[i]  = 0.3;
   }
 
-  FILE* fout = fopen("./data/thermosiphon10cm.txt", "w");
+  FILE* fout;
+
+  if (std::string(argv[1]) == "He") {
+  fout = fopen("./data/helium/thermosiphon10cm.txt", "w");
+  } else if (std::string(argv[1]) == "H2") {
+  fout = fopen("./data/hydrogen/thermosiphon10cm.txt", "w");
+  }
+
 
   fprintf(fout,
           "    %s                %s               %s               %s "
