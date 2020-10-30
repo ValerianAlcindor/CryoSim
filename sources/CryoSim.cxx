@@ -10,7 +10,13 @@
 
 int main(int argc, char* argv[]) {
 
-  CryoSim::cryostat cryo;
+
+  if (std::string(argv[1]) != "He" && std::string(argv[1]) != "H2") {
+  	std::cout << "Error: Wrong argument for Material. Add \"H2\" for hydrogen or \"He\" for Helium as an argument, when starting the program." << std::endl;
+  	return 0;
+  }
+
+  CryoSim::cryostat cryo(argv[1]);
 
   double q          = 0;
   double mt         = 0;
@@ -42,8 +48,7 @@ int main(int argc, char* argv[]) {
           "q", "Pres", "HL", "x", "zsrefInput", "mt");
 
   for (int i = 0; i < 15; i++) {
-    cryo.compute(tabq[i], tabPres[i], tabHL1[i], x, zsrefInput, mt);
-    std::cout << "i :" << i << "  tabq[i] = " << tabq[i] << std::endl;
+    cryo.compute(tabq[i], tabPres[i], tabHL1[i], argv[1], x, zsrefInput, mt);
 
     if (x > 0) {
       if (mt > 0) {

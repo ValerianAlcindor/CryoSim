@@ -15,7 +15,7 @@ namespace CryoSim {
 class cryostat {
 
 public:
-  cryostat();
+  cryostat(char* material);
   ~cryostat();
 
 public:
@@ -52,8 +52,8 @@ public:
   double FrictionCoefficient(double mt);
   double EC(double mt, double x0, double q, double zsrefInput);
   double PressureDrop(double mtot0, double q, double zsrefInput);
-  double Temperature(double P);
-  void compute(double q, double Pres, double HL, double& x, double& zsrefInput,
+  double Temperature(double P, char* material);
+  void compute(double q, double Pres, double HL, char* material, double& x, double& zsrefInput,
                double& mt);
 };
 } // namespace CryoSim

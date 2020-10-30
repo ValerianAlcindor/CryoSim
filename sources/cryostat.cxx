@@ -1,6 +1,8 @@
 #include "cryostat.h"
 
-CryoSim::cryostat::cryostat() {
+CryoSim::cryostat::cryostat(char* material) {
+
+  if (std::string(material) == "H2") {
   // Properties of H2 at 1atm and 20.238K
   beta = 0.0164; // Thermal expansion coefficient [K^-1]
   rhoL = 70.79; // Liquid density[kg/m^3]
@@ -9,10 +11,27 @@ CryoSim::cryostat::cryostat() {
   muL  = 13.92E-6; // LViscosity, [Pa*s] = [kg/m*s]
   muG  = 10.93E-6; // GViscosity, [Pa*s] = [kg/m*s]
   HC   = 10300; // specific Heat capacity [J/K*kg]
+  
+  } else if (std::string(material) == "He") {       
+                      
+  //Properties of LHe4 at 1atm
+  beta = 0.23; // Thermal expansion coefficient at 4,2K [K^-1]
+  rhoL = 125;  //density, LHe [kg/m^3]
+  rhoG = 17; //density, He4 Gas [kg/m^3]
+  Lv = 20750; // Latent heat [J/Kg] (p64) 
+//  Tres = 4.2; //Reservoir temperature [K]
+  muL = 3.60E-6;//LViscosity, [Pa*s] = [kg/m*s]
+  muG = 1.04E-6;//GViscosity, [Pa*s] = [kg/m*s]
+  HC = 4480; ; // specific Heat capacity, LHe [J/K*kg] 
+  
+  }
+  
+  //general properties and constants
   g    = 9.80665; // gravity [m/s^2]
   D    = 0.006; // diameter of the return line [m]
   l    = 0.55; // Length of the supply line [m] (careful : length between the
             // heating and the top of the return line)
+  
 }
 CryoSim::cryostat::~cryostat() {}
 
@@ -98,9 +117,24 @@ double CryoSim::cryostat::PressureDrop(double mtot0, double q,
 
 // Temperature(Reservoir-Pres)
 // Temperature(saturation-Pz)
-double CryoSim::cryostat::Temperature(double P) {
+double CryoSim::cryostat::Temperature(double P, char* material) {
 
-  // Constant name?
+  double x[3];
+  double val;
+
+  //Calculation of Temperature for helium
+  if (std::string(material) == "H2"){
+ 
+   val = 3.146631 + 1.357655*pow(((log(P)-10.3)/1.9),1) + 0.413923*(pow(((log(P)-10.3)/1.9),2)) + 0.091159*(pow(((log(P)-10.3)/1.9),3)) + 0.016349*(pow(((log(P)-10.3)/1.9),4)) + 0.001826*(pow(((log(P)-10.3)/1.9),5)) - 0.004325*(pow(((log(P)-10.3)/1.9),6)) - 0.004973*(pow(((log(P)-10.3)/1.9),7));
+    //Tsat = ((Pz-99233.46)/94572.)+4.2; (Yelei formula)
+      
+//    std::cout<<"val: "<<val<<std::endl;
+  } 
+  
+  //Calculation of Temperature for hydrogen
+   else if (std::string(material) == "He") {
+  
+
   double AA = 15.46688;
   double BB = -1.013378E2;
   double C  = 5.432005E-2;
@@ -109,19 +143,21 @@ double CryoSim::cryostat::Temperature(double P) {
   double a = C / D;
   double b = (AA - log(P)) / D;
   double c = BB / D;
-  double x[3];
 
   gsl_poly_solve_cubic(a, b, c, &x[0], &x[1], &x[2]);
 //  std::cout << x[0] << " " << x[1] << " " << x[2] << std::endl;
-  return x[1]; // x[0]? x[2]??
+  val = x[1];
+ }
+  
+  return val; // x[0]? x[2]??
+
 }
 
-void CryoSim::cryostat::compute(double q, double Pres, double HL, double& x,
+void CryoSim::cryostat::compute(double q, double Pres, double HL, char* material, double& x,
                                 double& zsrefInput, double& mt) {
 
   std::cout << "_________________Calculate q = " << q << "____________________" << std::endl;
-
-
+  
   // What can be modified
   zmax           = 0.55; // (l = zmax)
   double mtot0   = 10;
@@ -234,13 +270,13 @@ void CryoSim::cryostat::compute(double q, double Pres, double HL, double& x,
         double Thorizontal = 2 * M_PI * D * L * 2 / (mt * HC); // q=4W/m^2
 
         // Temperature at z [K]
-        Tz = Temperature(Pres) + (q * M_PI * D - mt * g) / (mt * HC) * z
+        Tz = Temperature(Pres, material) + (q * M_PI * D - mt * g) / (mt * HC) * z
                     + Thorizontal;
         
 //        std::cout << "Tz: " << Tz << std::endl;
 //        std::cout << "Tsat: " << Temperature(Pz) << std::endl;            
         
-        } while (abs(Temperature(Pz) - Tz) >= 0.0001);
+        } while (abs(Temperature(Pz, material) - Tz) >= 0.0001);
 
         zsref = z;
         Tsref = Tz;
@@ -313,7 +349,7 @@ void CryoSim::cryostat::compute(double q, double Pres, double HL, double& x,
   Pz = Pe + 2 * Cflo * pow(mt, 2) * zch / (D * rhoL * pow(TubeArea, 2))
               + rhoL * g * zch * (1 - beta * (q * M_PI * D / (2 * mt * HC)) * zch);
   
-  Tsat = Temperature(Pz);
+  Tsat = Temperature(Pz, material);
 
 	do {
 
