@@ -29,7 +29,7 @@ public:
   double HC; // specific Heat capacity [J/K*kg]
   double g; // gravity [m/s^2]
   double D; // diameter of the return line [m]
-  double l; // Length of the supply line [m] (careful : length between the
+//  double l; // Length of the supply line [m] (careful : length between the
             // heating and the top of the return line)
 
   // Thermosiphon properties

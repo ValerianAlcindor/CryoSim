@@ -5,6 +5,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
+#include <fstream>
 
 #include "cryostat.h"
 
@@ -32,14 +33,73 @@ int main(int argc, char* argv[]) {
   double tabHL2[size];
   double tabHL3[size];
 
-  for (int i = 0; i < size; i++) {
-    tabq[i]    = 10 + i * 10;
-    tabPres[i] = 21462.9;
-    tabHL1[i]  = 0.1;
-    tabHL2[i]  = 0.2;
-    tabHL3[i]  = 0.3;
-  }
 
+    
+    tabHL1[0]=1730.99;
+    tabHL1[1]=1650.95;
+    tabHL1[2]=1600.98;
+    tabHL1[3]=1550.92;
+    tabHL1[4]=1500.26;
+    tabHL1[5]=1480.64;
+    tabHL1[6]=1450.61;
+    tabHL1[7]=1430.22;
+    tabHL1[8]=1415.08;
+    tabHL1[9]=1400.14;
+    tabHL1[10]=1395.53;
+    tabHL1[11]=1385.55;
+    tabHL1[12]=1370.44;
+    tabHL1[13]=1360.54;
+    tabHL1[14]=1350.48;
+
+
+
+
+  //_________Input for Simulation_________
+
+
+
+  if (std::string(argv[1]) == "He") {
+  	std::ifstream inputfile;
+	inputfile.open("./data/helium/input10.txt");
+	int n_data = 0;
+  	int i_row = 0;
+	double data;
+	
+	char temp;
+	inputfile >> temp;
+	inputfile >> temp;
+	
+	while(inputfile >> data){
+
+	  if (n_data%2 == 0) {
+	
+	  tabq[i_row] = data;
+	
+	  } else {
+	
+	  tabPres[i_row] = data;
+	  i_row++;
+	
+	  }
+	
+	  n_data++;
+	
+	}
+
+
+  } else if (std::string(argv[1]) == "H2") {
+	for (int i = 0; i < size; i++) {
+	tabq[i]    = 100 + i * 100;
+	tabPres[i] = 21462.9;
+	tabHL1[i]  = 0.1;
+	tabHL2[i]  = 0.2;
+	tabHL3[i]  = 0.3;
+  }
+  }
+  
+  
+  //________Output File__________
+  
   FILE* fout;
 
   if (std::string(argv[1]) == "He") {
@@ -53,6 +113,9 @@ int main(int argc, char* argv[]) {
           "    %s                %s               %s               %s "
           " %s         %s\n",
           "q", "Pres", "HL", "x", "zsrefInput", "mt");
+
+
+  //________Starting the computation_______
 
   for (int i = 0; i < 15; i++) {
     cryo.compute(tabq[i], tabPres[i], tabHL1[i], argv[1], x, zsrefInput, mt);
