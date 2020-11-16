@@ -45,9 +45,6 @@ double CryoSim::cryostat::FrictionCoefficient(double mt) {
 double CryoSim::cryostat::EC(double mt, double VQ, double q,
                              double zsrefInput) {
 
-  
-//  std::cout << zsref << std::endl;
-
   // homogene model
   // void fraction from homogeneous model
   VF1 = (VQ * rhoL) / (VQ * rhoL + (1 - VQ) * rhoG);
@@ -65,7 +62,6 @@ double CryoSim::cryostat::EC(double mt, double VQ, double q,
 // Pressure drop____
 double CryoSim::cryostat::PressureDrop(double mtot0, double q,
                                        double zsrefInput) {
-  zsref = zsrefInput;
 
   // Liquid phase friction coefficient
   double Cflo = FrictionCoefficient(mtot0);
@@ -125,8 +121,7 @@ double CryoSim::cryostat::Temperature(double P, char* material) {
  
    val = 3.146631 + 1.357655*pow(((log(P)-10.3)/1.9),1) + 0.413923*(pow(((log(P)-10.3)/1.9),2)) + 0.091159*(pow(((log(P)-10.3)/1.9),3)) + 0.016349*(pow(((log(P)-10.3)/1.9),4)) + 0.001826*(pow(((log(P)-10.3)/1.9),5)) - 0.004325*(pow(((log(P)-10.3)/1.9),6)) - 0.004973*(pow(((log(P)-10.3)/1.9),7));
     //Tsat = ((Pz-99233.46)/94572.)+4.2; (Yelei formula)
-      
-//    std::cout<<"val: "<<val<<std::endl;
+
   } 
   
   //Calculation of Temperature for hydrogen
@@ -166,9 +161,6 @@ void CryoSim::cryostat::compute(double q, double Pres, double HL, char* material
   double lsupply = 1.45; // Supply line length [m]
   D    = 0.01; // diameter of the return line [m]
   
-  
-  double previousz = 10;
-  double lastz     = 15;
   double v         = 0;
 
  
@@ -178,8 +170,8 @@ void CryoSim::cryostat::compute(double q, double Pres, double HL, char* material
 
   //_______________________Main loop for zref, mt and x______________________
 
-  for (int y = 0; y < 4; y++) {
-    if (abs(eM) >= 0.0001 || abs(previousz - lastz) >= 0.001 || x < 0) {
+      do {
+  
       mtot0 = mt;
 
       // zsref = Vaporization height
@@ -220,11 +212,9 @@ void CryoSim::cryostat::compute(double q, double Pres, double HL, char* material
 //      std::cout << "y: " << y << std::endl;
 
       z = 0;
-      double dz = 0.00001;
+      double dz = 0.000001;
       double Pz;
       double Tz;
-
-      previousz = zsref;
       
 	do {
 	
@@ -252,7 +242,6 @@ void CryoSim::cryostat::compute(double q, double Pres, double HL, char* material
 
         zsref = z;
         Tsref = Tz;
-        lastz = zsref;
         
 //        std::cout << "z: " << z << std::endl;
 
@@ -263,7 +252,7 @@ void CryoSim::cryostat::compute(double q, double Pres, double HL, char* material
 
   x = 0.98; // Start value must be between 0 and 1. for 1 homgeneous model does not work,
             // because VF1 becomes 1 and the energy equation is divided by 0
-  double dx = 0.0000001;
+  double dx = 0.000001;
   double VQ;
   Pz = Pe + 2 * Cflo * pow(mt, 2) * zch / (D * rhoL * pow(TubeArea, 2))
               + rhoL * g * zch * (1 - beta * (q * M_PI * D / (2 * mt * HC)) * zch);
@@ -300,22 +289,21 @@ void CryoSim::cryostat::compute(double q, double Pres, double HL, char* material
            / (PressureDrop(mtot0 + dm, q, zsref)
               - PressureDrop(mtot0, q, zsref));
       mt = mtot0 - eM;
-    } else {
-      std::cout << "Total mass flow  = " << mt << " [kg/s], "
-                << "  "
-                << " Vapor quality  = " << x << ",  "
-                << "  Vaporization height = " << zsref << "[m] " << std::endl;
+      
+        v += 1;
+    if (v > 100) {
       break;
     }
-    v = v + 1;
-    if (v > 998) {
-      mt    = 0;
-      x     = 0;
-      zsref = 0;
-    }
+      
+      
+  } while (abs(mt - mtot0) >= 0.001);
+  
+  //________________End main loop____________________
 
-  } //________________End main loop____________________
-  std::cout << zsref << std::endl;
-  std::cout << FinalVQ << std::endl;
-  std::cout << mt << std::endl;
+
+  std::cout <<"z: " << zsref << std::endl;
+  std::cout <<"x: " << FinalVQ << std::endl;
+  std::cout <<"mt: " <<  mt << std::endl;
+  zsrefInput = zsref;
+  
 }
