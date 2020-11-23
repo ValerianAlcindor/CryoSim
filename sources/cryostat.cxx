@@ -166,7 +166,7 @@ void CryoSim::cryostat::compute(double q, double Pres, double HL, char* material
  
 
   // Pressure drop equation
-  double eM = 0.5;
+  double eM;// = 0.5;
 
   //_______________________Main loop for zref, mt and x______________________
 
@@ -188,7 +188,7 @@ void CryoSim::cryostat::compute(double q, double Pres, double HL, char* material
 
       //_____________without gap and horizontal______________
 //      delta13input         = rhoL * g * lsupply;
-
+//      std::cout << delta13input << std::endl;
 
       delta13input = HL; 
 //      std::cout << delta13input << std::endl;	    
@@ -216,6 +216,9 @@ void CryoSim::cryostat::compute(double q, double Pres, double HL, char* material
       double Pz;
       double Tz;
       
+//        std::cout << "Pres: " << Pres << std::endl; 
+//	std::cout << "mt: " << mt << std::endl; 
+      
 	do {
 	
 	z += dz;
@@ -228,17 +231,21 @@ void CryoSim::cryostat::compute(double q, double Pres, double HL, char* material
         Pz
             = Pe + 2 * Cflo * pow(mt, 2) * z / (D * rhoL * pow(TubeArea, 2))
               + rhoL * g * z * (1 - beta * (q * M_PI * D / (2 * mt * HC)) * z);
-        // Temperature(Pz); // I don't think this is needed because the value is
-        // not saved
 
         // additional radiation heat from the detecteur [K]
-        double Thorizontal = 2 * M_PI * D * L * 2 / (mt * HC); // q=4W/m^2
+        //double Thorizontal = 2 * M_PI * D * L * 2 / (mt * HC); // q=4W/m^2
 
         // Temperature at z [K]
-        Tz = Temperature(Pres, material) + (q * M_PI * D - mt * g) / (mt * HC) * z
-                    + Thorizontal;
+        Tz = Temperature(Pres, material) + (q * M_PI * D - mt * g) / (mt * HC) * z;
+                    //+ Thorizontal;
                            
         } while (abs(Temperature(Pz, material) - Tz) >= 0.0001);
+
+
+//	std::cout <<"Tsat: "<< Temperature(Pz,material) << std::endl;
+//	std::cout <<"Tz: "<< Tz << std::endl;
+//	std::cout << z << std::endl;
+
 
         zsref = z;
         Tsref = Tz;
@@ -261,34 +268,47 @@ void CryoSim::cryostat::compute(double q, double Pres, double HL, char* material
 
 	do {
 
-
 	VQ = x;
+
+//        std::cout << "VQ: " << VQ << std::endl;
+      
 	
         // Energie conservation equation (thesis p111 IV-23)
         double eX = EC(mt, VQ, q, zsref) * dx
                     / (EC(mt, VQ + dx, q, zsref) - EC(mt, VQ, q, zsref));
 
-        x = VQ - eX; 	
+        x = VQ - eX;
+        
+//        std::cout << "eX: " << eX << std::endl; 
+//        std::cout << "x: " << x << std::endl;
   	
   	} while (abs(x - VQ) >= 0.00001);
 
+
+//      std::cout << "_______________________" << std::endl;
 
       VF1        = abs(x) * rhoL / (abs(x) * rhoL + (1 - abs(x)) * rhoG);
       phisquare1 = (1 + abs(x) * (rhoL - rhoG) / rhoG)
                        * pow(1 + abs(x) * (muL - muG) / muG, -0.25);
 
+//      std::cout << x << std::endl;
 
       //_________________________Calculation of mt__________________________
 
       // Total mass flux
-      double dm = 0.00001;
+      double dm = 0.0001;
       FinalVQ   = x;
+
+//      std::cout << "mtot0: " << mtot0 << std::endl;
       
       // Pressure drop equation (thesis p111 IV-22)
-      eM = PressureDrop(mtot0, q, zsref) * dm
+      eM = 0.8 * PressureDrop(mtot0, q, zsref) * dm // 0.9 is factor for smaller step size, to make the newton method converge
            / (PressureDrop(mtot0 + dm, q, zsref)
               - PressureDrop(mtot0, q, zsref));
       mt = mtot0 - eM;
+      
+//      std::cout << "eM: " << eM << std::endl; 
+//      std::cout << "mt: " << mt << std::endl;
       
         v += 1;
     if (v > 100) {
@@ -296,7 +316,7 @@ void CryoSim::cryostat::compute(double q, double Pres, double HL, char* material
     }
       
       
-  } while (abs(mt - mtot0) >= 0.001);
+  } while (abs(mt - mtot0) >= 0.00001);
   
   //________________End main loop____________________
 

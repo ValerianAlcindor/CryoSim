@@ -34,7 +34,7 @@ int main(int argc, char* argv[]) {
   double tabHL3[size];
 
 
-    
+/*    
     tabHL1[0]=1730.99;
     tabHL1[1]=1650.95;
     tabHL1[2]=1600.98;
@@ -50,10 +50,57 @@ int main(int argc, char* argv[]) {
     tabHL1[12]=1370.44;
     tabHL1[13]=1360.54;
     tabHL1[14]=1350.48;
+*/
+/*
+    tabHL1[0]=1730.99;
+    tabHL1[1]=1730.95;
+    tabHL1[2]=1730.98;
+    tabHL1[3]=1730.92;
+    tabHL1[4]=1730.26;
+    tabHL1[5]=1730.64;
+    tabHL1[6]=1730.61;
+    tabHL1[7]=1730.22;
+    tabHL1[8]=1730.08;
+    tabHL1[9]=1730.14;
+    tabHL1[10]=1730.53;
+    tabHL1[11]=1730.55;
+    tabHL1[12]=1730.44;
+    tabHL1[13]=1730.54;
+    tabHL1[14]=1730.48;
+*/
 
 
+    tabHL1[0]=1698.7; 
+    tabHL1[1]=1680.75;
+    tabHL1[2]=1620.54;
+    tabHL1[3]=1591.62;
+    tabHL1[4]=1558.33;
+    tabHL1[5]=1534.33;
+    tabHL1[6]=1534.33;
+    tabHL1[7]=1511.67;
+    tabHL1[8]=1494.17;
+    tabHL1[9]=1478.75;
+    tabHL1[10]=1466.43;
+    tabHL1[11]=1430.57;
+    tabHL1[12]=1419.63;
+    tabHL1[13]=1407.69;
 
-
+/*
+    tabHL1[0]=1740.7; 
+    tabHL1[1]=1740.75;
+    tabHL1[2]=1740.54;
+    tabHL1[3]=1740.62;
+    tabHL1[4]=1740.33;
+    tabHL1[5]=1740.33;
+    tabHL1[6]=1740.33;
+    tabHL1[7]=1740.67;
+    tabHL1[8]=1740.17;
+    tabHL1[9]=1740.75;
+    tabHL1[10]=1740.43;
+    tabHL1[11]=1740.57;
+    tabHL1[12]=1740.63;
+    tabHL1[13]=1740.69;
+*/
   //_________Input for Simulation_________
 
 
@@ -123,7 +170,7 @@ int main(int argc, char* argv[]) {
     if (x > 0) {
       if (mt > 0) {
         fprintf(fout, "%f       %f       %f         %f        %f          %f\n",
-                tabq[i], tabPres[i], tabHL1[i], x, zsrefInput + 0.15, mt);
+                tabq[i], tabPres[i], tabHL1[i], x, zsrefInput, mt);
       }
     }
   }
