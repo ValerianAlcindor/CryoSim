@@ -152,15 +152,18 @@ void CryoSim::cryostat::compute(double q, double Pres, double HL, char* material
   std::cout << "_________________Calculate q = " << q << "____________________" << std::endl;
   
   // What can be modified
+//  zmax           = 1.45; // maxium height (0 is at target height), for Helium
   zmax           = 1.45; // maxium height (0 is at target height)
-  zch = 0.95; // from 0 to maxium heated height (0 is at target height)
+  zch = 1.45; // from 0 to maxium heated height (0 is at target height)
   
   double mtot0   = 10;
   mt             = 0.005; // must be close to expected value
   double L       = 0.3; // Horizontal tube lenght [m]
+//  double lsupply = 1.45; // Supply line length [m], for Helium
   double lsupply = 1.45; // Supply line length [m]
-  D    = 0.01; // diameter of the return line [m]
-  
+  //D    = 0.01; // diameter of the return line [m], for Helium
+  D    = 0.006; // diameter of the return line [m] 
+ 
   double v         = 0;
 
  
@@ -212,7 +215,8 @@ void CryoSim::cryostat::compute(double q, double Pres, double HL, char* material
 //      std::cout << "y: " << y << std::endl;
 
       z = 0;
-      double dz = 0.000001;
+//      double dz = 0.000001;
+      double dz = 0.00001;
       double Pz;
       double Tz;
       

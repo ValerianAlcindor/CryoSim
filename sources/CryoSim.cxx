@@ -69,7 +69,8 @@ int main(int argc, char* argv[]) {
     tabHL1[14]=1730.48;
 */
 
-
+//____Helium
+/*
     tabHL1[0]=1698.7; 
     tabHL1[1]=1680.75;
     tabHL1[2]=1620.54;
@@ -84,23 +85,23 @@ int main(int argc, char* argv[]) {
     tabHL1[11]=1430.57;
     tabHL1[12]=1419.63;
     tabHL1[13]=1407.69;
-
-/*
-    tabHL1[0]=1740.7; 
-    tabHL1[1]=1740.75;
-    tabHL1[2]=1740.54;
-    tabHL1[3]=1740.62;
-    tabHL1[4]=1740.33;
-    tabHL1[5]=1740.33;
-    tabHL1[6]=1740.33;
-    tabHL1[7]=1740.67;
-    tabHL1[8]=1740.17;
-    tabHL1[9]=1740.75;
-    tabHL1[10]=1740.43;
-    tabHL1[11]=1740.57;
-    tabHL1[12]=1740.63;
-    tabHL1[13]=1740.69;
 */
+
+    tabHL1[0]=1000.; 
+    tabHL1[1]=1000.;
+    tabHL1[2]=1000.;
+    tabHL1[3]=1000.;
+    tabHL1[4]=1000.;
+    tabHL1[5]=1000.;
+    tabHL1[6]=1000.;
+    tabHL1[7]=1000.;
+    tabHL1[8]=1000.;
+    tabHL1[9]=1000.;
+    tabHL1[10]=1000.;
+    tabHL1[11]=1000.;
+    tabHL1[12]=1000.;
+    tabHL1[13]=1000.;
+
   //_________Input for Simulation_________
 
 
@@ -133,14 +134,13 @@ int main(int argc, char* argv[]) {
 	
 	}
 
-
   } else if (std::string(argv[1]) == "H2") {
 	for (int i = 0; i < size; i++) {
-	tabq[i]    = 100 + i * 100;
-	tabPres[i] = 21462.9;
-	tabHL1[i]  = 0.1;
-	tabHL2[i]  = 0.2;
-	tabHL3[i]  = 0.3;
+	tabq[i]    = 10 + i * 10;
+	tabPres[i] = 102000.; // before 21462.9; ??
+//	tabHL1[i]  = 0.1;
+//	tabHL2[i]  = 0.2;
+//	tabHL3[i]  = 0.3;
   }
   }
   
