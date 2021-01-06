@@ -2,7 +2,7 @@
 
 void plot(){
 
-
+/*
 //__________________Plot of mt_________________
 
 TCanvas *c1 = new TCanvas("c1","c1",800,600);
@@ -109,5 +109,66 @@ TLegend *legend3 = new TLegend(0.1,0.7,0.48,0.9);
 legend3->AddEntry(g5,"Data");
 legend3->AddEntry(g6,"Simulation");
 legend3->Draw(); 
+
+*/
+
+//_________________________Hydrogen_____________________-
+
+//_______________Plot of mt___________________
+
+TCanvas *c1 = new TCanvas("c1","c1",800,600);
+
+
+TGraph *g1 = new TGraph("./data/hydrogen/thermosiphon10cm.txt", "%lg %*lg %*lg %*lg %*lg %lg");
+
+g1->SetLineColor(kBlue);
+g1->SetMarkerStyle(23);
+
+
+g1->SetTitle("; q [W/m²]; mt [kg/s]");
+
+g1->Draw("ALP");
+
+TLegend *legend = new TLegend(0.1,0.7,0.48,0.9);
+
+legend->AddEntry(g1,"Simulation");
+legend->Draw(); 
+
+//_____________________Plot of z________________________
+
+TCanvas *c2 = new TCanvas("c2","c2",800,600);
+
+TGraph *g2 = new TGraph("./data/hydrogen/thermosiphon10cm.txt", "%lg %*lg %*lg %*lg %lg");
+
+g2->SetLineColor(kBlue);
+g2->SetMarkerStyle(22);
+
+g2->SetTitle("; q [W/m²]; z [cm]");
+
+g2->Draw("ALP");
+
+TLegend *legend2 = new TLegend(0.1,0.7,0.48,0.9);
+
+legend2->AddEntry(g2,"Simulation");
+legend2->Draw(); 
+
+
+//_______________________Plot of x____________________________
+
+TCanvas *c3 = new TCanvas("c3","c3",800,600);
+
+TGraph *g3 = new TGraph("./data/hydrogen/thermosiphon10cm.txt", "%lg %*lg %*lg %lg");
+
+g3->SetLineColor(kBlue);
+g3->SetMarkerStyle(22);
+
+g3->SetTitle("; q [W/m²]; x");
+
+g3->Draw("ALP");
+
+TLegend *legend3 = new TLegend(0.1,0.7,0.48,0.9);
+
+legend3->AddEntry(g3,"Simulation");
+legend3->Draw();
 
 }
