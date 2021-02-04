@@ -1,4 +1,7 @@
 #include "cryostat.h"
+#include <sstream>
+#include <fstream>
+#include <iostream>
 
 CryoSim::cryostat::cryostat(char* material) {
 
@@ -156,23 +159,59 @@ void CryoSim::cryostat::compute(double q, double Pres, double HL,
             << std::endl;
 
   // What can be modified
+
+    std::ifstream inputfile;
+    inputfile.open("./data/inputcryostat.txt");
+    int i_row = 0;
+    double Cryostatvariables[5];
+
+    std::string line;
+    while (std::getline(inputfile, line))
+    {
+	std::stringstream stream(line);
+	std::string a;
+	double b;
+	if(stream >> a >> b)
+	{
+	Cryostatvariables[i_row] = b;
+
+	i_row++;
+//	std::cout<<a<<std::endl;
+//	std::cout<<b<<std::endl;
+	}
+    }
+
+
+  D		= Cryostatvariables[0];
+  double lsupply 	= Cryostatvariables[1];
+  zmax  	= Cryostatvariables[2]; // maxium height (0 is at target height)
+  zch  		= Cryostatvariables[3]; // from 0 to maxium heated height (0 is at target height)
+  mt 		= Cryostatvariables[4];
+
+
   //  zmax           = 1.45; // maxium height (0 is at target height), for
   //  Helium
-  zmax = 1.45; // maxium height (0 is at target height)
-  zch  = 1.45; // from 0 to maxium heated height (0 is at target height)
+
+
 
   double mtot0 = 10;
-  mt           = 0.005; // must be close to expected value
+//  mt           = 0.005; // must be close to expected value
   double L     = 0.3; // Horizontal tube lenght [m]
   //  double lsupply = 1.45; // Supply line length [m], for Helium
-  double lsupply = 1.45; // Supply line length [m]
-  // D    = 0.01; // diameter of the return line [m], for Helium
-  D = 0.006; // diameter of the return line [m]
+//  double lsupply = 1.45; // Supply line length [m]
+//  D    = 0.01; // diameter of the return line [m], for Helium
+  //D = 0.006; // diameter of the return line [m]
 
   double v = 0;
 
   // Pressure drop equation
   double eM; // = 0.5;
+
+
+
+
+
+
 
   //_______________________Main loop for zref, mt and x______________________
 

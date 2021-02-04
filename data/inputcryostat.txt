@@ -1,0 +1,5 @@
+TubeDiameter[m]			0.01
+LengthOfSupplyLine[m]		1.45
+LengthOfReturnLine[m]		1.45
+HeatedPartOfReturnLine[m]	0.9
+MassFlowStartValue[kg/s]	0.005
