@@ -29,8 +29,8 @@ public:
   double HC; // specific Heat capacity [J/K*kg]
   double g; // gravity [m/s^2]
   double D; // diameter of the return line [m]
-//  double l; // Length of the supply line [m] (careful : length between the
-            // heating and the top of the return line)
+  //  double l; // Length of the supply line [m] (careful : length between the
+  // heating and the top of the return line)
 
   // Thermosiphon properties
   double TubeArea; // tube cross section area
@@ -53,8 +53,8 @@ public:
   double EC(double mt, double x0, double q, double zsrefInput);
   double PressureDrop(double mtot0, double q, double zsrefInput);
   double Temperature(double P, char* material);
-  void compute(double q, double Pres, double HL, char* material, double& x, double& zsrefInput,
-               double& mt);
+  void   compute(double q, double Pres, double HL, char* material, double& x,
+                 double& zsrefInput, double& mt);
 };
 } // namespace CryoSim
 #endif
