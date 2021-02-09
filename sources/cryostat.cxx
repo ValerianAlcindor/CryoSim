@@ -1,7 +1,7 @@
 #include "cryostat.h"
-#include <sstream>
 #include <fstream>
 #include <iostream>
+#include <sstream>
 
 CryoSim::cryostat::cryostat(char* material) {
 
@@ -14,9 +14,7 @@ CryoSim::cryostat::cryostat(char* material) {
     muL  = 13.92E-6; // LViscosity, [Pa*s] = [kg/m*s]
     muG  = 10.93E-6; // GViscosity, [Pa*s] = [kg/m*s]
     HC   = 10300; // specific Heat capacity [J/K*kg]
-
   } else if (std::string(material) == "He") {
-
     // Properties of LHe4 at 1atm
     beta = 0.23; // Thermal expansion coefficient at 4,2K [K^-1]
     rhoL = 125; // density, LHe [kg/m^3]
@@ -27,26 +25,23 @@ CryoSim::cryostat::cryostat(char* material) {
     muG = 1.04E-6; // GViscosity, [Pa*s] = [kg/m*s]
     HC  = 4480; // specific Heat capacity, LHe [J/K*kg]
   }
-
   // general properties and constants
   g = 9.80665; // gravity [m/s^2]
   //  l    = 0.55; // Length of the supply line [m] (careful : length between
   //  the
   // heating and the top of the return line)
 }
+
 CryoSim::cryostat::~cryostat() {}
 
 double CryoSim::cryostat::FrictionCoefficient(double mt) {
-
   double val = 0.079 / pow(abs(mt) * D / (TubeArea * muL), 0.25);
-
   return val;
 }
 
 // Energy Conservation____
 double CryoSim::cryostat::EC(double mt, double VQ, double q,
                              double zsrefInput) {
-
   // homogene model
   // void fraction from homogeneous model
   VF1 = (VQ * rhoL) / (VQ * rhoL + (1 - VQ) * rhoG);
@@ -74,15 +69,6 @@ double CryoSim::cryostat::PressureDrop(double mtot0, double q,
       = 2 * Cflo * pow(mtot0, 2) * zsref / (D * rhoL * pow(TubeArea, 2))
         + rhoL * g * zsref
               * (1 - beta * q * M_PI * D / (2 * mtot0 * HC) * zsref);
-
-  // just for gap
-  /*
-  double abovetarget // did not find this equation in YD report -> needs to be
-                     // checked
-      = 2 * Cflo * pow(mtot0, 2) * gap / (D * rhoL * pow(TubeArea, 2))
-        + rhoL * g * gap
-           * (1 - beta * ((q * M_PI * D) / (2 * mtot0 * HC)) * gap);
-  */
 
   // Pressure variation for the heated 2phases fluid
   double deltaP2phase = 2 * Cflo * pow(mtot0, 2) / (D * rhoL * pow(TubeArea, 2))
@@ -126,9 +112,6 @@ double CryoSim::cryostat::Temperature(double P, char* material) {
     val += 0.001826 * (pow(((log(P) - 10.3) / 1.9), 5));
     val -= 0.004325 * (pow(((log(P) - 10.3) / 1.9), 6));
     val -= 0.004973 * (pow(((log(P) - 10.3) / 1.9), 7));
-
-    // Tsat = ((Pz-99233.46)/94572.)+4.2; (Yelei formula)
-
   }
 
   // Calculation of Temperature for hydrogen
@@ -144,11 +127,11 @@ double CryoSim::cryostat::Temperature(double P, char* material) {
     double c = BB / D;
 
     gsl_poly_solve_cubic(a, b, c, &x[0], &x[1], &x[2]);
-    //  std::cout << x[0] << " " << x[1] << " " << x[2] << std::endl;
+
     val = x[1];
   }
 
-  return val; // x[0]? x[2]??
+  return val;
 }
 
 void CryoSim::cryostat::compute(double q, double Pres, double HL,
@@ -159,144 +142,82 @@ void CryoSim::cryostat::compute(double q, double Pres, double HL,
             << std::endl;
 
   // What can be modified
+  std::ifstream inputfile;
+  inputfile.open("./data/inputcryostat.txt");
+  int    i_row = 0;
+  double Cryostatvariables[5];
 
-    std::ifstream inputfile;
-    inputfile.open("./data/inputcryostat.txt");
-    int i_row = 0;
-    double Cryostatvariables[5];
-
-    std::string line;
-    while (std::getline(inputfile, line))
-    {
-	std::stringstream stream(line);
-	std::string a;
-	double b;
-	if(stream >> a >> b)
-	{
-	Cryostatvariables[i_row] = b;
-
-	i_row++;
-//	std::cout<<a<<std::endl;
-//	std::cout<<b<<std::endl;
-	}
+  std::string line;
+  while (std::getline(inputfile, line)) {
+    std::stringstream stream(line);
+    std::string       a;
+    double            b;
+    if (stream >> a >> b) {
+      Cryostatvariables[i_row] = b;
+      i_row++;
     }
+  }
 
-
-  D		= Cryostatvariables[0];
-  double lsupply 	= Cryostatvariables[1];
-  zmax  	= Cryostatvariables[2]; // maxium height (0 is at target height)
-  zch  		= Cryostatvariables[3]; // from 0 to maxium heated height (0 is at target height)
-  mt 		= Cryostatvariables[4];
-
-
-  //  zmax           = 1.45; // maxium height (0 is at target height), for
-  //  Helium
-
-
+  D              = Cryostatvariables[0];
+  double lsupply = Cryostatvariables[1];
+  zmax = Cryostatvariables[2]; // maxium height (0 is at target height)
+  zch  = Cryostatvariables[3]; // from 0 to maxium heated height (0 is at target
+                              // height)
+  mt = Cryostatvariables[4];
 
   double mtot0 = 10;
-//  mt           = 0.005; // must be close to expected value
   double L     = 0.3; // Horizontal tube lenght [m]
-  //  double lsupply = 1.45; // Supply line length [m], for Helium
-//  double lsupply = 1.45; // Supply line length [m]
-//  D    = 0.01; // diameter of the return line [m], for Helium
-  //D = 0.006; // diameter of the return line [m]
-
-  double v = 0;
+  double v     = 0;
 
   // Pressure drop equation
-  double eM; // = 0.5;
-
-
-
-
-
-
+  double eM;
 
   //_______________________Main loop for zref, mt and x______________________
-
   while (abs(mt - mtot0) >= 0.00001) {
 
     mtot0 = mt;
 
     // zsref = Vaporization height
     TubeArea = M_PI * pow(D / 2., 2);
-    // TargetArea = M_PI*pow((0.02/2.),2); Target cross section
 
     // Liquid phase friction coefficient
     double Cflo = FrictionCoefficient(mt);
 
-    // Liquid phase friction coeff for the target (different D)
-    // double Cflo2 =
-    // 0.079/pow(((abs(mt))*0.02)/(TargetArea2*muL),0.25);
-
-    //_____________without gap and horizontal______________
-    //      delta13input         = rhoL * g * lsupply;
-    //      std::cout << delta13input << std::endl;
-
     delta13input = HL;
-    //      std::cout << delta13input << std::endl;
+
     double frictionforce
         = 2 * Cflo * pow(mt, 2) * lsupply / (D * rhoL * pow(TubeArea, 2));
 
     double Pe = Pres + delta13input - frictionforce;
 
-    //______________with gap and horizontal____________
-    /*
-          delta13input         = rhoL * g * lsupply;
-          double frictionforce = 2 * Cflo * pow(mt, 2) * (lsupply + L * 2 +
-       0.15) / (D * rhoL * pow(TubeArea, 2));
-
-          double Pe = Pres + delta13input - frictionforce - rhoL * g * 0.15;
-    */
-    //_____________________Loop for Tref and zref____________________
-
-    //      std::cout << "y: " << y << std::endl;
-
-    z = 0;
-    //      double dz = 0.000001;
+    z         = 0;
     double dz = 0.00001;
     double Pz;
     double Tz;
 
-    //        std::cout << "Pres: " << Pres << std::endl;
-    //	std::cout << "mt: " << mt << std::endl;
-
     while (abs(Temperature(Pz, material) - Tz) >= 0.0001) {
       z += dz;
-      //	std::cout << "z: " << z << std::endl;
       if (z > zmax) {
-        //	std::cout << "Loop did not converge" << std::endl;
         break;
       }
+
       // Temperature and pressure calculations at z
       Pz = Pe + 2 * Cflo * pow(mt, 2) * z / (D * rhoL * pow(TubeArea, 2))
            + rhoL * g * z * (1 - beta * (q * M_PI * D / (2 * mt * HC)) * z);
 
-      // additional radiation heat from the detecteur [K]
-      // double Thorizontal = 2 * M_PI * D * L * 2 / (mt * HC); // q=4W/m^2
-
       // Temperature at z [K]
       Tz = Temperature(Pres, material)
            + (q * M_PI * D - mt * g) / (mt * HC) * z;
-      //+ Thorizontal;
     }
-
-    //	std::cout <<"Tsat: "<< Temperature(Pz,material) << std::endl;
-    //	std::cout <<"Tz: "<< Tz << std::endl;
-    //	std::cout << z << std::endl;
 
     zsref = z;
     Tsref = Tz;
-
-    //        std::cout << "z: " << z << std::endl;
-
-    //__________________________Loop for vapor
-    // quality_______________________________
+    //__________________________Loop for vapor quality___________
 
     x = 0.98; // Start value must be between 0 and 1. for 1 homgeneous model
               // does not work, because VF1 becomes 1 and the energy equation is
               // divided by 0
+
     double dx = 0.000001;
     double VQ;
     Pz = Pe + 2 * Cflo * pow(mt, 2) * zch / (D * rhoL * pow(TubeArea, 2))
@@ -308,25 +229,16 @@ void CryoSim::cryostat::compute(double q, double Pres, double HL,
 
       VQ = x;
 
-      //        std::cout << "VQ: " << VQ << std::endl;
-
       // Energie conservation equation (thesis p111 IV-23)
       double eX = EC(mt, VQ, q, zsref) * dx
                   / (EC(mt, VQ + dx, q, zsref) - EC(mt, VQ, q, zsref));
 
       x = VQ - eX;
-
-      //        std::cout << "eX: " << eX << std::endl;
-      //        std::cout << "x: " << x << std::endl;
     }
-
-    //      std::cout << "_______________________" << std::endl;
 
     VF1        = abs(x) * rhoL / (abs(x) * rhoL + (1 - abs(x)) * rhoG);
     phisquare1 = (1 + abs(x) * (rhoL - rhoG) / rhoG)
                  * pow(1 + abs(x) * (muL - muG) / muG, -0.25);
-
-    //      std::cout << x << std::endl;
 
     //_________________________Calculation of mt__________________________
 
@@ -334,21 +246,12 @@ void CryoSim::cryostat::compute(double q, double Pres, double HL,
     double dm = 0.0001;
     FinalVQ   = x;
 
-    //      std::cout << "mtot0: " << mtot0 << std::endl;
-
     // Pressure drop equation (thesis p111 IV-22)
-    // 0.9 is factor for smaller step size, to make the newton method
-    // converge
-    // eM = 0.8 * PressureDrop(mtot0, q, zsref) * dm
-    //      / (PressureDrop(mtot0 + dm, q, zsref) - PressureDrop(mtot0, q, zsref));
-    // mt = mtot0 - eM;
-
+    // 0.1 is the minimum step size required to converge on the solution via
+    // the differential equation solving method of Newton
     eM = 0.1 * PressureDrop(mtot0, q, zsref) * dm
          / (PressureDrop(mtot0 + dm, q, zsref) - PressureDrop(mtot0, q, zsref));
     mt = mtot0 - eM;
-
-    //      std::cout << "eM: " << eM << std::endl;
-    //      std::cout << "mt: " << mt << std::endl;
 
     v += 1;
     if (v > 100) {
